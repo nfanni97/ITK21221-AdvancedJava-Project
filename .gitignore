@@ -1,6 +1,12 @@
 # latex
 latex_build/
 
+# own unnecessary files
+db/
+logfile
+temp.log
+spring-boot-security-postgresql/
+
 # spring boot
 *#
 *.iml

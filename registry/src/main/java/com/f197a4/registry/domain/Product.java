@@ -1,5 +1,6 @@
-package com.f197a4.registry.domain.security;
+package com.f197a4.registry.domain;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,32 +14,31 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+@Table(name = "products")
 @Entity
-@Table(name = "users")
-@RequiredArgsConstructor @NoArgsConstructor @AllArgsConstructor
 @Getter @Setter
-public class User {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+@RequiredArgsConstructor
+public class Product implements Serializable {
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    
-    @NonNull
-    private String username;
 
     @NonNull
-    private String password;
+    private String name;
 
+    @NonNull
+    private Integer priceHuf;
+
+    @NonNull
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "user_roles",
-        joinColumns= @JoinColumn(name="user_id"),
-        inverseJoinColumns= @JoinColumn(name="role_id")
+        name="product_category",
+        joinColumns = @JoinColumn(name="product_id"),
+        inverseJoinColumns = @JoinColumn(name="category_id")
     )
-    private Set<Role> roles = new HashSet<>();
+    private Set<Category> categories = new HashSet<>();
 }
