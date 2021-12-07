@@ -14,7 +14,9 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -22,8 +24,14 @@ import lombok.Setter;
 @Table(name = "products")
 @Entity
 @Getter @Setter
-@RequiredArgsConstructor
-public class Product implements Serializable {
+@RequiredArgsConstructor @NoArgsConstructor @AllArgsConstructor
+public class Product {
+    public Product(@NonNull String name2, @NonNull Integer priceHuf2, @NonNull Set<Category> categories2) {
+        name = name2;
+        priceHuf = priceHuf2;
+        categories = categories2;
+    }
+
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
@@ -33,12 +41,12 @@ public class Product implements Serializable {
     @NonNull
     private Integer priceHuf;
 
-    @NonNull
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name="product_category",
         joinColumns = @JoinColumn(name="product_id"),
         inverseJoinColumns = @JoinColumn(name="category_id")
     )
+    @NonNull
     private Set<Category> categories = new HashSet<>();
 }

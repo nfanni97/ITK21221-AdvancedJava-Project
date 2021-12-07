@@ -26,5 +26,26 @@ public class Category {
     @NonNull
     private String name;
 
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == null) {
+            return false;
+        }
+        if(!this.getClass().equals(obj.getClass())) {
+            return false;
+        }
+        Category obj2 = (Category) obj;
+        return name.equals(obj2.name) && id.equals(obj2.id);
+    }
+
+    /*@Override
+    public int hashCode() {
+        return (id+name).hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return id + " " + name;
+    }*/
 
 }

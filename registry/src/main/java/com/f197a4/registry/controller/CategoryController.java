@@ -40,15 +40,9 @@ public class CategoryController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public Category modifyCategory(@RequestBody Category modifiedCategory, @PathVariable Long id) {
-        return categoryRepo.findById(id).map(
-            category -> {
-                category.setName(modifiedCategory.getName());
-                return categoryRepo.save(category);
-            }
-        ).orElseGet(() -> {
-            modifiedCategory.setId(id);
-            return categoryRepo.save(modifiedCategory);
-        });
+        Category toUpdate = categoryRepo.getById(id);
+        toUpdate.setName(modifiedCategory.getName());
+        return categoryRepo.save(toUpdate);
     }
 
     @GetMapping("/{id}")

@@ -11,10 +11,3 @@
 # Authentication source
 
 [link](https://www.bezkoder.com/spring-boot-security-postgresql-jwt-authentication/#Overview)
-
-# Demo
-
-- signup: `curl -X POST localhost:8080/api/auth/signup -H "Content-Type: application/json" -d '{"username":"user1","password":"123"}'`
-- login: `curl -X POST localhost:8080/api/auth/signin -H "Content-Type: application/json" -d '{"username":"user1","password":"123"}' > temp.log`
-  - `export TOKEN=$(cat temp.log | jq -r '.token')`
-- get dummy content: `curl -X GET localhost:8080/api/content/hello -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN"`
