@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -85,5 +86,14 @@ public class ProductController {
                 }
             }).collect(Collectors.toSet());
         return categories;
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public void deleteProduct(@PathVariable Long id) {
+        if(!productRepo.existsById(id)) {
+            throw new ProductNotFoundException(id);
+        }
+        productRepo.deleteById(id);
     }
 }

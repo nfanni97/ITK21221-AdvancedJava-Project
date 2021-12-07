@@ -10,6 +10,7 @@ import com.f197a4.registry.repository.CategoryRepo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,5 +50,14 @@ public class CategoryController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public Category getCategory(@PathVariable Long id) {
         return categoryRepo.findById(id).orElseThrow(() -> new CategoryNotFoundException(id));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public void deleteCategory(@PathVariable Long id) {
+        if(!categoryRepo.existsById(id)) {
+            throw new CategoryNotFoundException(id);
+        }
+        categoryRepo.deleteById(id);
     }
 }

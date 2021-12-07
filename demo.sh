@@ -19,6 +19,9 @@ curl -X GET localhost:8080/api/content/categories/ -H "Content-Type: application
 curl -X PUT localhost:8080/api/content/categories/1 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"name":"kitchen"}' > temp.log
 # get one specific category
 curl -X GET localhost:8080/api/content/categories/1 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" > temp.log
+# delete a category
+curl -X DELETE localhost:8080/api/content/categories/5 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN"
+curl -X GET localhost:8080/api/content/categories/ -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" > temp.log
 
 # products endpoint
 # add product
@@ -29,3 +32,7 @@ curl -X GET localhost:8080/api/content/products/ -H "Content-Type: application/j
 curl -X PUT localhost:8080/api/content/products/2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"name":"kitchen clock","priceHuf":6600,"categories":["kitchen"]}' > temp.log
 # get one specific product
 curl -X GET localhost:8080/api/content/products/2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" > temp.log
+# delete a product
+curl -X DELETE localhost:8080/api/content/products/2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN"
+curl -X GET localhost:8080/api/content/products/ -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" > temp.log
+read -n 1
