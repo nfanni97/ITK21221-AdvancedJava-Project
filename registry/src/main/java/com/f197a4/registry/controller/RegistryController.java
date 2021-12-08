@@ -1,9 +1,13 @@
 package com.f197a4.registry.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.f197a4.registry.domain.Product;
 import com.f197a4.registry.domain.RegistryItem;
 import com.f197a4.registry.domain.security.User;
 import com.f197a4.registry.exception.ProductException;
@@ -50,21 +54,30 @@ public class RegistryController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public RegistryResponse getRegistryOfUser(@PathVariable Long id) {
         //logger.info("Getting registry of user")
-        if(!userRepo.existsById(id)) {
-            throw new UsernameNotFoundException("User with id "+id+" is not found");
-        }
+        checkUserExists(id);
         List<RegistryItem> registry = registryItemRepo.findRegistryItemByRecipientId(id);
-        RegistryResponse resp = new RegistryResponse(userRepo.findById(id).get().getUsername());
+        RegistryResponse resp = new RegistryResponse(userRepo.getById(id).getUsername());
         resp.setItems(registry.stream().map(item -> {
             String buyerStr;
-            String productStr = productRepo.findById(item.getId()).get().getName();
+            String productStr = item.getItem().getName();
             if(item.getBuyer() != null) {
-                buyerStr = userRepo.findById(item.getBuyer().getId()).get().getUsername();
+                buyerStr = item.getBuyer().getUsername();
             } else {
                 buyerStr = "N/A";
             }
             return new RegistryResponseItem(buyerStr, productStr);
         }).collect(Collectors.toList()));
+        return resp;
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public List<RegistryResponse> getAllRegistries() {
+        List<User> users = userRepo.findAll();
+        List<RegistryResponse> resp = new ArrayList<>();
+        for(User u: users) {
+            resp.add(getRegistryOfUser(u.getId()));
+        }
         return resp;
     }
 
@@ -170,5 +183,26 @@ public class RegistryController {
             userRepo.getById(recipientId).getUsername(),
             productRepo.getById(productId)
         );
+    }
+
+    @GetMapping("/i-bought")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public List<RegistryResponse> boughtByCurrentUser() {
+        User currentUser = getCurrentUser();
+        Map<User,List<Product>> boughtMap = new HashMap<>();
+        for(RegistryItem item: currentUser.getBought()) {
+            if(!boughtMap.containsKey(item.getRecipient())) {
+                boughtMap.put(item.getRecipient(), new ArrayList<Product>());
+            }
+            boughtMap.get(item.getRecipient()).add(item.getItem());
+        }
+        // create response object
+        List<RegistryResponse> resp = boughtMap.entrySet().stream().map(entry -> {
+            List<RegistryResponseItem> items = entry.getValue().stream().map(item -> {
+                return new RegistryResponseItem(currentUser.getUsername(), item.getName());
+            }).collect(Collectors.toList());
+            return new RegistryResponse(entry.getKey().getUsername(),items);
+        }).collect(Collectors.toList());
+        return resp;
     }
 }
