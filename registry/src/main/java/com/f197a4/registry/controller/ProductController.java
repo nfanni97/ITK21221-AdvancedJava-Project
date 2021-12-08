@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import com.f197a4.registry.domain.Category;
 import com.f197a4.registry.domain.Product;
-import com.f197a4.registry.exception.ProductNotFoundException;
+import com.f197a4.registry.exception.ProductException;
 import com.f197a4.registry.payload.request.ProductRequest;
 import com.f197a4.registry.repository.CategoryRepo;
 import com.f197a4.registry.repository.ProductRepo;
@@ -69,7 +69,7 @@ public class ProductController {
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public Product getProduct(@PathVariable Long id) {
-        return productRepo.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+        return productRepo.findById(id).orElseThrow(() -> new ProductException(id,"not found"));
     }
 
     private Set<Category> checkAndSaveCategories(Set<String> categoryStrs) {
@@ -92,7 +92,7 @@ public class ProductController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public void deleteProduct(@PathVariable Long id) {
         if(!productRepo.existsById(id)) {
-            throw new ProductNotFoundException(id);
+            throw new ProductException(id,"not found");
         }
         productRepo.deleteById(id);
     }

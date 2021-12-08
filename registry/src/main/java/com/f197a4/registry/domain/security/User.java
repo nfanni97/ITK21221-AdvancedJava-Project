@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -48,10 +49,16 @@ public class User {
     private Set<Role> roles = new HashSet<>();
 
     @NonNull
-    @OneToMany(mappedBy = "recipient")
+    @OneToMany(
+        mappedBy = "recipient",
+        cascade = CascadeType.ALL
+    )
     List<RegistryItem> registry = new ArrayList<>();
 
     @NonNull
-    @OneToMany(mappedBy = "buyer")
+    @OneToMany(
+        mappedBy = "buyer",
+        cascade = CascadeType.ALL
+    )
     List<RegistryItem> bought = new ArrayList<>();
 }

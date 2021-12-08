@@ -6,8 +6,7 @@ import java.util.stream.Collectors;
 
 import com.f197a4.registry.domain.RegistryItem;
 import com.f197a4.registry.domain.security.User;
-import com.f197a4.registry.exception.ProductBoughtException;
-import com.f197a4.registry.exception.ProductNotFoundException;
+import com.f197a4.registry.exception.ProductException;
 import com.f197a4.registry.payload.request.AddRegistryItemRequest;
 import com.f197a4.registry.payload.request.BuyRequest;
 import com.f197a4.registry.payload.response.BuyResponse;
@@ -24,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -75,7 +75,7 @@ public class RegistryController {
         // check if that id exists
         if(!productRepo.existsById(productId)) {
             logger.error("The product with id {} does not exist.", productId);
-            throw new ProductNotFoundException(productId);
+            throw new ProductException(productId,"not found");
         }
         
         // add to registry of current user and save
@@ -85,7 +85,6 @@ public class RegistryController {
             currentUser,
             productRepo.getById(productId)
         );
-        registryItemRepo.saveAndFlush(item);
         List<RegistryItem> currentRegistry = currentUser.getRegistry();
         currentRegistry.add(item);
         currentUser.setRegistry(currentRegistry);
@@ -106,29 +105,67 @@ public class RegistryController {
     public BuyResponse buyProduct(@RequestBody BuyRequest buyRequest) {
         // check that recipient exists
         long recipientId = buyRequest.getRecipientId();
-        if(!userRepo.existsById(recipientId)) {
-            throw new UsernameNotFoundException("User with id "+recipientId+" could not be found");
-        }
+        checkUserExists(recipientId);
         // check that registry of recipient contains product in question and is not spoken for
         long productId = buyRequest.getProductId();
         List<RegistryItem> recipientRegistry = registryItemRepo.findRegistryItemByRecipientId(recipientId);
         List<RegistryItem> recipientRegistryCurrentProduct = recipientRegistry.stream().filter(item -> item.getId().equals(productId)).collect(Collectors.toList());
         if(recipientRegistryCurrentProduct.isEmpty()) {
-            throw new ProductNotFoundException(productId);
+            throw new ProductException(productId, "not found");
         }
         if(recipientRegistryCurrentProduct.get(0).getBuyer() != null) {
-            throw new ProductBoughtException(productId, recipientId);
+            throw new ProductException(productId, "already bought for "+recipientId);
         }
         // create registryItem
         RegistryItem item = recipientRegistryCurrentProduct.get(0);
         User currentUser = getCurrentUser();
         item.setBuyer(currentUser);
-        registryItemRepo.saveAndFlush(item);
         // add to current user's bought list and save
         List<RegistryItem> currentBought = currentUser.getBought();
         currentBought.add(item);
         userRepo.saveAndFlush(currentUser);
         // create and return buyResponse
+        return new BuyResponse(
+            userRepo.getById(recipientId).getUsername(),
+            productRepo.getById(productId)
+        );
+    }
+
+    private void checkUserExists(Long id) {
+        if(!userRepo.existsById(id)) {
+            throw new UsernameNotFoundException("User with id "+id+" could not be found");
+        }
+    }
+
+    @DeleteMapping("/unbuy")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public BuyResponse unbuyProduct(@RequestBody BuyRequest buyRequest) {
+        // check that recipient exists
+        long recipientId = buyRequest.getRecipientId();
+        checkUserExists(recipientId);
+        // check that registry of recipient contains product in question and is spoken for by current user
+        long productId = buyRequest.getProductId();
+        List<RegistryItem> recipientRegistry = registryItemRepo.findRegistryItemByRecipientId(recipientId);
+        List<RegistryItem> recipientRegistryCurrentProduct = recipientRegistry.stream().filter(item -> item.getId().equals(productId)).collect(Collectors.toList());
+        if(recipientRegistryCurrentProduct.isEmpty()) {
+            throw new ProductException(productId,"not found");
+        }
+        User buyer = recipientRegistryCurrentProduct.get(0).getBuyer();
+        User currentUser = getCurrentUser();
+        if(buyer == null) {
+            throw new ProductException(productId, "not yet bought for "+recipientId);
+        }
+        if(!currentUser.equals(buyer)) {
+            throw new ProductException(productId,"the buyer is not "+currentUser.getId());
+        }
+        // create registryItem
+        RegistryItem item = recipientRegistryCurrentProduct.get(0);
+        item.setBuyer(null);
+        // remove from bought list and save
+        List<RegistryItem> currentBought = currentUser.getBought();
+        currentBought.removeIf(i -> i.getId().equals(productId));
+        currentUser.setBought(currentBought);
+        userRepo.saveAndFlush(currentUser);
         return new BuyResponse(
             userRepo.getById(recipientId).getUsername(),
             productRepo.getById(productId)

@@ -9,8 +9,8 @@ import lombok.Setter;
 @Getter @Setter
 public class BuyRequest {
     @NonNull
-    private int productId;
+    private Long productId;
 
     @NonNull
-    private int recipientId;
+    private Long recipientId;
 }

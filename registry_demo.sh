@@ -18,3 +18,6 @@ export USER3_ID=$(cat temp.log | jq -r '.id')
 
 # buy china vase for user2 by user3
 curl -X POST localhost:8080/api/content/registries/buy -H "Content-Type: application/json" -H "Authorization: Bearer $USER3_TOKEN" -d '{"productId":1,"recipientId":'$USER2_ID'}' > temp.log
+
+# unbuy china vase for user2 by user3
+curl -X DELETE localhost:8080/api/content/registries/unbuy -H "Content-Type: application/json" -H "Authorization: Bearer $USER3_TOKEN" -d '{"productId":1,"recipientId":'$USER2_ID'}' > temp.log
