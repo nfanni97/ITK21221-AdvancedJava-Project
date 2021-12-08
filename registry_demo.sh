@@ -7,8 +7,9 @@ export USER2_ID=$(cat temp.log | jq -r '.id')
 # at first it is empty
 curl -X GET localhost:8080/api/content/registries/registry/$USER2_ID -H "Content-Type: application/json" -H "Authorization: Bearer $USER2_TOKEN" > temp.log
 
-# add a product to it
+# add products to it
 curl -X POST localhost:8080/api/content/registries/add -H "Content-Type: application/json" -H "Authorization: Bearer $USER2_TOKEN" -d '{"productId":1}' > temp.log
+curl -X POST localhost:8080/api/content/registries/add -H "Content-Type: application/json" -H "Authorization: Bearer $USER2_TOKEN" -d '{"productId":2}' > temp.log
 
 # create another user
 curl -X POST localhost:8080/api/auth/signup -H "Content-Type: application/json" -d '{"username":"user3","password":"123"}'
@@ -21,6 +22,11 @@ curl -X POST localhost:8080/api/content/registries/buy -H "Content-Type: applica
 
 # get everything bought by user3
 curl -X GET localhost:8080/api/content/registries/i-bought -H "Content-Type: application/json" -H "Authorization: Bearer $USER3_TOKEN" > temp.log
+
+# get items bought for user2
+curl -X GET localhost:8080/api/content/registries/bought-for-me -H "Content-Type: application/json" -H "Authorization: Bearer $USER2_TOKEN" > temp.log
+read -n 1
+curl -X GET localhost:8080/api/content/registries/bought-for-me/surprise -H "Content-Type: application/json" -H "Authorization: Bearer $USER2_TOKEN" > temp.log
 read -n 1
 
 # get all registries
