@@ -80,4 +80,6 @@ public class AuthController {
         userRepo.save(user);
         return ResponseEntity.ok(new MessageResponse("User registered successfully"));
     }
+
+    
 }

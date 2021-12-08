@@ -35,4 +35,3 @@ curl -X GET localhost:8080/api/content/products/2 -H "Content-Type: application/
 # delete a product
 curl -X DELETE localhost:8080/api/content/products/2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN"
 curl -X GET localhost:8080/api/content/products/ -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" > temp.log
-read -n 1

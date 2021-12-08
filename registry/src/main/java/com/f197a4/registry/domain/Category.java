@@ -26,7 +26,7 @@ public class Category {
     @NonNull
     private String name;
 
-    @Override
+    /*@Override
     public boolean equals(Object obj) {
         if(obj == null) {
             return false;
@@ -38,14 +38,14 @@ public class Category {
         return name.equals(obj2.name) && id.equals(obj2.id);
     }
 
-    /*@Override
+    @Override
     public int hashCode() {
         return (id+name).hashCode();
-    }
+    }*/
 
     @Override
     public String toString() {
         return id + " " + name;
-    }*/
+    }
 
 }
