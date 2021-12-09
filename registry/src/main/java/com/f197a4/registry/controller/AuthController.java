@@ -18,6 +18,8 @@ import com.f197a4.registry.repository.UserRepo;
 import com.f197a4.registry.security.jwt.JwtUtils;
 import com.f197a4.registry.service.UserDetailsImpl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +36,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    private Logger logger = LoggerFactory.getLogger(AuthController.class);
+
     @Autowired
     AuthenticationManager authenticationManager;
 
@@ -51,14 +55,17 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        logger.info("Signing in user with name {}.",loginRequest.getUsername());
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
+        logger.debug("Generated token: {}",jwt);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
             .map(item -> item.getAuthority()).collect(Collectors.toList());
+        logger.info("User {} got their token.",loginRequest.getUsername());
         return ResponseEntity.ok(new JwtResponse(
             jwt,
             userDetails.getId(),
@@ -69,7 +76,9 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody LoginRequest signupRequest) {
+        logger.info("Signing up new user with name {}.",signupRequest.getUsername());
         if(userRepo.existsByUsername(signupRequest.getUsername())) {
+            logger.info("The name {} is already taken.",signupRequest.getUsername());
             return ResponseEntity.badRequest().body(new MessageResponse("Error: username is already taken"));
         }
         User user = new User(signupRequest.getUsername(),encoder.encode(signupRequest.getPassword()));
@@ -78,6 +87,7 @@ public class AuthController {
         roles.add(userRole);
         user.setRoles(roles);
         userRepo.save(user);
+        logger.info("User {} signed up.",signupRequest.getUsername());
         return ResponseEntity.ok(new MessageResponse("User registered successfully"));
     }
 

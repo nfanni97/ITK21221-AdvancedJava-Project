@@ -14,4 +14,9 @@ public class RegistryResponseItem {
 
     @NonNull
     private String productName;
+
+    @Override
+    public String toString() {
+        return "Buyer: "+buyerName+", product: "+productName;
+    }
 }

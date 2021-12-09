@@ -1,6 +1,5 @@
 package com.f197a4.registry.controller;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,16 +37,18 @@ public class ProductController {
 
     @GetMapping("/")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public List<Product> getCategories() {
-        return productRepo.findAll();
+    public List<Product> getProducts() {
+        List<Product> prods = productRepo.findAll();
+        logger.info("Returning all products: {}",prods);
+        return prods;
     }
 
     @PostMapping("/")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public Product addNewProduct(@RequestBody ProductRequest productRequest) {
-        logger.info("Request received: name {}, price {}, categories {}",productRequest.getName(),productRequest.getPriceHuf(),productRequest.getCategories());
+        logger.info("Creating product: name {}, price {}, categories {}",productRequest.getName(),productRequest.getPriceHuf(),productRequest.getCategories());
         Set<Category> categories = checkAndSaveCategories(productRequest.getCategories());
-        logger.debug("categories: {}",categories.toString());
+        logger.info("Created new product.");
         return productRepo.save(new Product(
             productRequest.getName(),
             productRequest.getPriceHuf(),
@@ -58,22 +59,34 @@ public class ProductController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public Product modifyProduct(@RequestBody ProductRequest modifiedProduct, @PathVariable Long id) {
-        Product toUpdate = productRepo.getById(id);
+        Product toUpdate = productRepo.findById(id).orElseThrow(() -> {
+            logger.error("Product with id {} is not found",id);
+            return new ProductException(id,"not found");
+        });
+        logger.info("Modified product with id {} from ({}) to ({}).",id,toUpdate,modifiedProduct);
         Set<Category> categories = checkAndSaveCategories(modifiedProduct.getCategories());
         toUpdate.setCategories(categories);
         toUpdate.setName(modifiedProduct.getName());
         toUpdate.setPriceHuf(modifiedProduct.getPriceHuf());
+        logger.info("Product {} updated.",id);
         return productRepo.save(toUpdate);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public Product getProduct(@PathVariable Long id) {
-        return productRepo.findById(id).orElseThrow(() -> new ProductException(id,"not found"));
+        logger.info("Getting product with id {}",id);
+        Product prod = productRepo.findById(id).orElseThrow(() -> {
+            logger.error("Product {} not found.", id);
+            return new ProductException(id,"not found");
+        });
+        logger.info("Found product {}: {}.", prod,id);
+        return prod;
     }
 
     private Set<Category> checkAndSaveCategories(Set<String> categoryStrs) {
         // check and save categories
+        logger.debug("Checking if categories exist by name, saving them if not: {}",categoryStrs);
         Set<Category> categories = categoryStrs.stream()
             .map(categoryStr -> {
                 logger.debug("working on category {}", categoryStr);
@@ -85,15 +98,19 @@ public class ProductController {
                     return categoryRepo.findByName(categoryStr).get();
                 }
             }).collect(Collectors.toSet());
+        logger.debug("Fetched categories: {}",categories);
         return categories;
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public void deleteProduct(@PathVariable Long id) {
+        logger.info("Deleting product {}.",id);
         if(!productRepo.existsById(id)) {
+            logger.error("Product {} not found.", id);
             throw new ProductException(id,"not found");
         }
         productRepo.deleteById(id);
+        logger.info("Product {} deleted.", id);
     }
 }

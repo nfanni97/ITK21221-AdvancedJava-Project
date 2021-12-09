@@ -16,4 +16,9 @@ public class RegistryResponse {
     private String recipientName;
 
     private List<RegistryResponseItem> items = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return "Recipient: "+recipientName+", items: "+items;
+    }
 }

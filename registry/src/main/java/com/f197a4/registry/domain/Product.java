@@ -50,4 +50,9 @@ public class Product {
     )
     @NonNull
     private Set<Category> categories = new HashSet<>();
+
+    @Override
+    public String toString() {
+        return id+". Name: "+name+", price: "+priceHuf+" HUF, categories: "+categories;
+    }
 }

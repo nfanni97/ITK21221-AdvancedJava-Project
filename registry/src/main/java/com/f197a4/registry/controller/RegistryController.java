@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.f197a4.registry.domain.Product;
@@ -53,7 +52,7 @@ public class RegistryController {
     @GetMapping("/registry/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public RegistryResponse getRegistryOfUser(@PathVariable Long id) {
-        // logger.info("Getting registry of user")
+        logger.info("Getting registry of user {}.",id);
         checkUserExists(id);
         List<RegistryItem> registry = registryItemRepo.findRegistryItemByRecipientId(id);
         RegistryResponse resp = new RegistryResponse(userRepo.getById(id).getUsername());
@@ -67,30 +66,33 @@ public class RegistryController {
             }
             return new RegistryResponseItem(buyerStr, productStr);
         }).collect(Collectors.toList()));
+        logger.info("Registry of user {}: {}.",id,resp);
         return resp;
     }
 
     @GetMapping("/all")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public List<RegistryResponse> getAllRegistries() {
+        logger.info("Getting registries of every user.");
         List<User> users = userRepo.findAll();
         List<RegistryResponse> resp = new ArrayList<>();
         for (User u : users) {
             resp.add(getRegistryOfUser(u.getId()));
         }
+        logger.info("Collected registries: {}",resp);
         return resp;
     }
 
     @PostMapping("/add")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public RegistryResponse addProductToRegistry(@RequestBody AddRegistryItemRequest requestBody) {
+        logger.info("Adding product {} to current user's registry.",requestBody.getProductId());
         long productId = requestBody.getProductId();
         // check if that id exists
         if (!productRepo.existsById(productId)) {
             logger.error("The product with id {} does not exist.", productId);
             throw new ProductException(productId, "not found");
         }
-
         // add to registry of current user and save
         User currentUser = getCurrentUser();
         // create new registryItem
@@ -103,6 +105,7 @@ public class RegistryController {
         userRepo.saveAndFlush(currentUser);
 
         // return udpated registry
+        logger.info("Registry of user {} updated.",currentUser.getId());
         return getRegistryOfUser(currentUser.getId());
     }
 
@@ -110,12 +113,14 @@ public class RegistryController {
         UserDetails currentUserDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
                 .getPrincipal();
         User currentUser = userRepo.findByUsername(currentUserDetails.getUsername()).get();
+        logger.debug("Current user is {}.",currentUser.getId());
         return currentUser;
     }
 
     @PostMapping("/buy")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public BuyResponse buyProduct(@RequestBody BuyRequest buyRequest) {
+        logger.info("Buying product {} for {}.",buyRequest.getProductId(),buyRequest.getRecipientId());
         // check that recipient exists
         long recipientId = buyRequest.getRecipientId();
         checkUserExists(recipientId);
@@ -126,9 +131,11 @@ public class RegistryController {
         List<RegistryItem> recipientRegistryCurrentProduct = recipientRegistry.stream()
                 .filter(item -> item.getId().equals(productId)).collect(Collectors.toList());
         if (recipientRegistryCurrentProduct.isEmpty()) {
+            logger.error("Product {} is not in user {} registry.", productId,recipientId);
             throw new ProductException(productId, "not found");
         }
         if (recipientRegistryCurrentProduct.get(0).getBuyer() != null) {
+            logger.error("Product {} already bought for user {}.", productId,recipientId);
             throw new ProductException(productId, "already bought for " + recipientId);
         }
         // create registryItem
@@ -140,20 +147,25 @@ public class RegistryController {
         currentBought.add(item);
         userRepo.saveAndFlush(currentUser);
         // create and return buyResponse
+        logger.info("User {} bought product {} for user {}.", currentUser.getId(), productId, recipientId);
         return new BuyResponse(
                 userRepo.getById(recipientId).getUsername(),
                 productRepo.getById(productId));
     }
 
     private void checkUserExists(Long id) {
+        logger.debug("Checking if user {} exists.",id);
         if (!userRepo.existsById(id)) {
+            logger.error("User {} does not exist.", id);
             throw new UsernameNotFoundException("User with id " + id + " could not be found");
         }
+        logger.debug("User {} exists.",id);
     }
 
     @DeleteMapping("/unbuy")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public BuyResponse unbuyProduct(@RequestBody BuyRequest buyRequest) {
+        logger.info("Unbuying product {} for user {}.",buyRequest.getProductId(),buyRequest.getRecipientId());
         // check that recipient exists
         long recipientId = buyRequest.getRecipientId();
         checkUserExists(recipientId);
@@ -164,14 +176,17 @@ public class RegistryController {
         List<RegistryItem> recipientRegistryCurrentProduct = recipientRegistry.stream()
                 .filter(item -> item.getId().equals(productId)).collect(Collectors.toList());
         if (recipientRegistryCurrentProduct.isEmpty()) {
+            logger.error("Product {} not in user {} registry.", productId,recipientId);
             throw new ProductException(productId, "not found");
         }
         User buyer = recipientRegistryCurrentProduct.get(0).getBuyer();
         User currentUser = getCurrentUser();
         if (buyer == null) {
+            logger.error("Product {} not yet bought for user {}", productId,recipientId);
             throw new ProductException(productId, "not yet bought for " + recipientId);
         }
         if (!currentUser.equals(buyer)) {
+            logger.error("Product {} is not bought by user {} for user {}.", productId,currentUser.getId(),recipientId);
             throw new ProductException(productId, "the buyer is not " + currentUser.getId());
         }
         // create registryItem
@@ -182,6 +197,7 @@ public class RegistryController {
         currentBought.removeIf(i -> i.getId().equals(productId));
         currentUser.setBought(currentBought);
         userRepo.saveAndFlush(currentUser);
+        logger.info("User {} unbought product {} for user {}.",currentUser.getId(),productId,recipientId);
         return new BuyResponse(
                 userRepo.getById(recipientId).getUsername(),
                 productRepo.getById(productId));
@@ -191,6 +207,7 @@ public class RegistryController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public List<RegistryResponse> boughtByCurrentUser() {
         User currentUser = getCurrentUser();
+        logger.info("Getting products bought by user {}.",currentUser.getId());
         Map<User, List<Product>> boughtMap = new HashMap<>();
         for (RegistryItem item : currentUser.getBought()) {
             if (!boughtMap.containsKey(item.getRecipient())) {
@@ -205,16 +222,19 @@ public class RegistryController {
             }).collect(Collectors.toList());
             return new RegistryResponse(entry.getKey().getUsername(), items);
         }).collect(Collectors.toList());
+        logger.info("Products bought by user {}: {}",currentUser.getId(),resp);
         return resp;
     }
 
     @GetMapping("/bought-for-me/surprise")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public RegistryResponse boughtForCurrentUserSurprise() {
+        logger.info("Getting products bought for current user with surprise buyers.");
         RegistryResponse resp = boughtForCurrentUser();
         for(RegistryResponseItem item: resp.getItems()) {
             item.setBuyerName("Surprise!");
         }
+        logger.info("Redacted products bought for current user: {}.",resp);
         return resp;
     }
 
@@ -222,6 +242,7 @@ public class RegistryController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public RegistryResponse boughtForCurrentUser() {
         User currentUser = getCurrentUser();
+        logger.info("Getting products bought for current user {}.",currentUser.getId());
         List<RegistryItem> registryOnlyBought = currentUser.getRegistry().stream()
                 .filter(item -> item.getBuyer() != null)
                 .collect(Collectors.toList());
@@ -229,6 +250,7 @@ public class RegistryController {
         resp.setItems(registryOnlyBought.stream()
                 .map(item -> new RegistryResponseItem(item.getBuyer().getUsername(), item.getItem().getName()))
                 .collect(Collectors.toList()));
+        logger.info("Product bought for user {}: {}.",currentUser.getId(),resp);
         return resp;
     }
 }

@@ -1,5 +1,6 @@
 package com.f197a4.registry.controller;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +17,7 @@ public class DummyController {
     public String helloUser() {
         // greet with username
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        LoggerFactory.getLogger(DummyController.class).info("Greeting user {}.",userDetails.getUsername());
         return "Hello "+userDetails.getUsername();
     }
 }
