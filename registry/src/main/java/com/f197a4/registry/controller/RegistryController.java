@@ -76,7 +76,7 @@ public class RegistryController {
 
     @GetMapping("/all")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public List<RegistryResponse> getAllRegistries(@RequestParam Integer maxPrice) {
+    public List<RegistryResponse> getAllRegistries(@RequestParam(required=false) Integer maxPrice) {
         logger.info("Getting registries of every user.");
         List<User> users = userRepo.findAll();
         List<RegistryResponse> resp = new ArrayList<>();
@@ -134,7 +134,7 @@ public class RegistryController {
         List<RegistryItem> recipientRegistry = registryItemRepo.findRegistryItemByRecipientId(recipientId);
         logger.debug("User {} registry: {}", recipientId,recipientRegistry);
         List<RegistryItem> recipientRegistryCurrentProduct = recipientRegistry.stream()
-                .filter(item -> item.getId().equals(productId)).collect(Collectors.toList());
+                .filter(item -> item.getItem().getId().equals(productId)).collect(Collectors.toList());
         if (recipientRegistryCurrentProduct.isEmpty()) {
             logger.error("Product {} is not in user {} registry.", productId,recipientId);
             throw new ProductException(productId, "not found");

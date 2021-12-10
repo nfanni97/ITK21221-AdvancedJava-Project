@@ -2,7 +2,7 @@
 latex_build/
 
 # own unnecessary files
-db/
+#db/
 logfile
 temp.log
 spring-boot-security-postgresql/
