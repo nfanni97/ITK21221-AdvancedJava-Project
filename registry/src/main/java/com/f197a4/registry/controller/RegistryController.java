@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -51,10 +52,13 @@ public class RegistryController {
 
     @GetMapping("/registry/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public RegistryResponse getRegistryOfUser(@PathVariable Long id) {
+    public RegistryResponse getRegistryOfUser(@PathVariable Long id,@RequestParam Integer maxPrice) {
         logger.info("Getting registry of user {}.",id);
         checkUserExists(id);
         List<RegistryItem> registry = registryItemRepo.findRegistryItemByRecipientId(id);
+        if(maxPrice != null) {
+            registry.removeIf(item -> item.getItem().getPriceHuf() <= maxPrice);
+        }
         RegistryResponse resp = new RegistryResponse(userRepo.getById(id).getUsername());
         resp.setItems(registry.stream().map(item -> {
             String buyerStr;
@@ -72,12 +76,12 @@ public class RegistryController {
 
     @GetMapping("/all")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public List<RegistryResponse> getAllRegistries() {
+    public List<RegistryResponse> getAllRegistries(@RequestParam Integer maxPrice) {
         logger.info("Getting registries of every user.");
         List<User> users = userRepo.findAll();
         List<RegistryResponse> resp = new ArrayList<>();
         for (User u : users) {
-            resp.add(getRegistryOfUser(u.getId()));
+            resp.add(getRegistryOfUser(u.getId(),maxPrice));
         }
         logger.info("Collected registries: {}",resp);
         return resp;
@@ -106,7 +110,7 @@ public class RegistryController {
 
         // return udpated registry
         logger.info("Registry of user {} updated.",currentUser.getId());
-        return getRegistryOfUser(currentUser.getId());
+        return getRegistryOfUser(currentUser.getId(),null);
     }
 
     private User getCurrentUser() {

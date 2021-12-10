@@ -16,6 +16,11 @@ curl -s -X POST localhost:8080/api/content/registries/add -H "Content-Type: appl
 echo "This endpoint returns whole registry"
 read -n 1
 
+# filter by price
+echo "Filter registry of user2 by price..."
+curl -s -X GET localhost:8080/api/content/registries/registry/$USER2_ID?maxPrice=2000 -H "Content-Type: application/json" -H "Authorization: Bearer $USER2_TOKEN" > temp.log
+read -n 1
+
 # create another user
 echo "Creating user3"
 curl -s -X POST localhost:8080/api/auth/signup -H "Content-Type: application/json" -d '{"username":"user3","password":"123"}' > temp.log
