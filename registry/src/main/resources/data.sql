@@ -8,4 +8,4 @@ INSERT INTO products(id,name,price_huf) VALUES(1,'China vase',135000);
 INSERT INTO products(id,name,price_huf) VALUES(3,'soap saver', 500);
 
 INSERT INTO product_category(product_id,category_id) VALUES(1,2);
-INSERT INTO product_category(product_id,category_id) VALUES(3,3);
+INSERT INTO product_category(product_id,category_id) VALUES(3,2);

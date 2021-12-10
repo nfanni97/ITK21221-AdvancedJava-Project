@@ -128,6 +128,7 @@ public class RegistryController {
         // spoken for
         long productId = buyRequest.getProductId();
         List<RegistryItem> recipientRegistry = registryItemRepo.findRegistryItemByRecipientId(recipientId);
+        logger.debug("User {} registry: {}", recipientId,recipientRegistry);
         List<RegistryItem> recipientRegistryCurrentProduct = recipientRegistry.stream()
                 .filter(item -> item.getId().equals(productId)).collect(Collectors.toList());
         if (recipientRegistryCurrentProduct.isEmpty()) {
