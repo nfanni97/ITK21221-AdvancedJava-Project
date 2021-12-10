@@ -2,8 +2,6 @@ package com.f197a4.registry.service;
 
 import java.io.StringReader;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 import javax.xml.parsers.DocumentBuilder;

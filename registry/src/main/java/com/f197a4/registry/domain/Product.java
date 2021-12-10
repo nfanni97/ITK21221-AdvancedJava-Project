@@ -1,6 +1,5 @@
 package com.f197a4.registry.domain;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -66,6 +65,6 @@ public class Product {
 
     @Override
     public String toString() {
-        return id+". Name: "+name+", price: "+priceHuf+" HUF, categories: "+categories;
+        return id+". Name: "+name+", price: "+priceHuf+" HUF ("+priceEur+"EUR), categories: "+categories;
     }
 }

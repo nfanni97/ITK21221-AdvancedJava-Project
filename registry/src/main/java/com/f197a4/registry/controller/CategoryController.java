@@ -2,8 +2,6 @@ package com.f197a4.registry.controller;
 
 import java.util.List;
 
-import javax.naming.NameNotFoundException;
-
 import com.f197a4.registry.domain.Category;
 import com.f197a4.registry.exception.CategoryNotFoundException;
 import com.f197a4.registry.repository.CategoryRepo;

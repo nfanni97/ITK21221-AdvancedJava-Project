@@ -8,6 +8,12 @@
 4. create database: `createdb -h <socket directory> registryDB`
 5. stop: `pg_ctl -D ./db stop`
 
+# Tests
+
+- unitTest: categoryController/modifyCategory
+- integration: categoryRepo/findByName
+- [source](https://www.baeldung.com/spring-boot-testing)
+
 # Authentication source
 
 [link](https://www.bezkoder.com/spring-boot-security-postgresql-jwt-authentication/#Overview)

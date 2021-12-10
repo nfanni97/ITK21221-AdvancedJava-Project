@@ -1,6 +1,5 @@
 package com.f197a4.registry.repository;
 
-import java.util.Optional;
 import java.util.List;
 
 import com.f197a4.registry.domain.RegistryItem;
