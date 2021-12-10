@@ -57,7 +57,7 @@ public class RegistryController {
         checkUserExists(id);
         List<RegistryItem> registry = registryItemRepo.findRegistryItemByRecipientId(id);
         if(maxPrice != null) {
-            registry.removeIf(item -> item.getItem().getPriceHuf() <= maxPrice);
+            registry.removeIf(item -> item.getItem().getPriceHuf() > maxPrice);
         }
         RegistryResponse resp = new RegistryResponse(userRepo.getById(id).getUsername());
         resp.setItems(registry.stream().map(item -> {
