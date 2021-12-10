@@ -12,8 +12,12 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
+import javax.persistence.PostLoad;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import com.f197a4.registry.service.ExchangeService;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -50,6 +54,15 @@ public class Product {
     )
     @NonNull
     private Set<Category> categories = new HashSet<>();
+
+    @JsonInclude
+    @Transient
+    private Double priceEur;
+
+    @PostLoad
+    public void setPriceEur() {
+        priceEur = ExchangeService.exchange(priceHuf, "eur");
+    }
 
     @Override
     public String toString() {
